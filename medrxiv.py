@@ -36,7 +36,7 @@ def get_pdf_link(entry: dict) -> str:
 
 
 def fetch_medrxiv_papers(
-    category_filter: str = "Epidemiology",
+    category_filters: list[str] | str = "Epidemiology",
     max_results: int = 200,
     start_date: datetime.date | None = None,
     end_date: datetime.date | None = None,
@@ -44,7 +44,7 @@ def fetch_medrxiv_papers(
     """Fetch papers from medRxiv API and format them similarly to arXiv entries.
 
     Args:
-        category_filter: Category to filter papers by (e.g., "Epidemiology", "Clinical Trials")
+        category_filters: Single category or list of categories to filter papers by (e.g., "Epidemiology", ["Epidemiology", "Clinical Trials"])
         max_results: Maximum number of results to fetch
         start_date: Start date for paper search (defaults to today)
         end_date: End date for paper search (defaults to today)
@@ -53,6 +53,11 @@ def fetch_medrxiv_papers(
         List of MedArxivEntry objects
 
     """
+    # Convert single category to list for consistent processing
+    if isinstance(category_filters, str):
+        category_filters = [category_filters]
+    category_filters = [cat.lower() for cat in category_filters]
+
     # Set default dates if not provided
     today = datetime.datetime.utcnow().date()
     if end_date is None:
@@ -81,7 +86,8 @@ def fetch_medrxiv_papers(
     # Filter and format entries
     entries = []
     for entry in data["collection"]:
-        if entry.get("category", "").lower() == category_filter.lower():
+        entry_category = entry.get("category", "").lower()
+        if entry_category in category_filters:
             # Format the entry to match arXiv structure
             formatted_entry = MedArxivEntry(
                 title=entry.get("title", ""),
@@ -98,7 +104,7 @@ def fetch_medrxiv_papers(
 
 if __name__ == "__main__":
     # Parameters
-    category_filter = "Epidemiology"  # Replace with your desired category
+    category_filters = ["Epidemiology", "Clinical Trials"]  # List of categories to filter by
     max_results = 200  # Number of results to fetch
 
     # Example of using custom date range
@@ -106,7 +112,7 @@ if __name__ == "__main__":
     end_date = datetime.date(2024, 3, 15)
 
     # Fetch and process papers
-    entries = fetch_medrxiv_papers(category_filter, max_results, start_date, end_date)
+    entries = fetch_medrxiv_papers(category_filters, max_results, start_date, end_date)
 
     # Print results in similar format to arxiv.py
     print(f"Total entries fetched: {len(entries)}")

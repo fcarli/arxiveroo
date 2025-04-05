@@ -36,7 +36,7 @@ def get_pdf_link(entry: dict) -> str:
 
 
 def fetch_biorxiv_papers(
-    category_filter: str = "Genomics",
+    category_filters: list[str] | str = "Genomics",
     server: str = "biorxiv",
     start_date: datetime.date | None = None,
     end_date: datetime.date | None = None,
@@ -44,7 +44,7 @@ def fetch_biorxiv_papers(
     """Fetch papers from bioRxiv API and format them similarly to arXiv entries.
 
     Args:
-        category_filter: Category to filter papers by
+        category_filters: Single category or list of categories to filter papers by
         server: Either "biorxiv" or "medrxiv"
         start_date: Start date for paper search (defaults to today)
         end_date: End date for paper search (defaults to today)
@@ -53,6 +53,11 @@ def fetch_biorxiv_papers(
         List of BioArxivEntry objects
 
     """
+    # Convert single category to list for consistent processing
+    if isinstance(category_filters, str):
+        category_filters = [category_filters]
+    category_filters = [cat.lower() for cat in category_filters]
+
     # Set default dates if not provided
     today = datetime.datetime.utcnow().date()
     if end_date is None:
@@ -81,7 +86,8 @@ def fetch_biorxiv_papers(
     # Filter and format entries
     entries = []
     for entry in data["collection"]:
-        if entry.get("category", "").lower() == category_filter.lower():
+        entry_category = entry.get("category", "").lower()
+        if entry_category in category_filters:
             # Format the entry to match arXiv structure
             formatted_entry = BioArxivEntry(
                 title=entry.get("title", ""),
@@ -98,7 +104,7 @@ def fetch_biorxiv_papers(
 
 if __name__ == "__main__":
     # Parameters
-    category_filter = "Genomics"  # Replace with your desired category
+    category_filters = ["Genomics", "Evolutionary Biology"]  # List of categories to filter by
     server = "biorxiv"  # Use "biorxiv" or "medrxiv"
 
     # Example of using custom date range
@@ -106,7 +112,7 @@ if __name__ == "__main__":
     end_date = datetime.date(2024, 3, 15)
 
     # Fetch and process papers
-    entries = fetch_biorxiv_papers(category_filter, server, start_date, end_date)
+    entries = fetch_biorxiv_papers(category_filters, server, start_date, end_date)
 
     # Print results in similar format to arxiv.py
     print(f"Total entries fetched: {len(entries)}")

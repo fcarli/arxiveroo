@@ -37,7 +37,7 @@ def get_pdf_link(entry) -> str:
 
 
 def fetch_arxiv_papers(
-    category: str = "cs.AI",
+    categories: list[str] | str = "cs.AI",
     max_results: int = 200,
     start_date: datetime.date | None = None,
     end_date: datetime.date | None = None,
@@ -45,7 +45,7 @@ def fetch_arxiv_papers(
     """Fetch papers from arXiv API and format them similarly to bioRxiv entries.
 
     Args:
-        category: arXiv category to filter papers by (e.g., "cs.AI")
+        categories: Single category or list of categories to filter papers by (e.g., "cs.AI", ["cs.AI", "cs.LG"])
         max_results: Maximum number of results to fetch
         start_date: Start date for paper search (defaults to today)
         end_date: End date for paper search (defaults to today)
@@ -54,6 +54,10 @@ def fetch_arxiv_papers(
         List of ArxivEntry objects
 
     """
+    # Convert single category to list for consistent processing
+    if isinstance(categories, str):
+        categories = [categories]
+
     # Set default dates if not provided
     today = datetime.datetime.utcnow().date()
     if end_date is None:
@@ -63,7 +67,8 @@ def fetch_arxiv_papers(
 
     # Construct the arXiv API query URL
     base_url = "http://export.arxiv.org/api/query?"
-    search_query = f"cat:{category}"
+    # Join categories with OR operator
+    search_query = " OR ".join(f"cat:{cat}" for cat in categories)
     query_url = (
         f"{base_url}search_query={search_query}"
         f"&start=0&max_results={max_results}"
@@ -89,7 +94,7 @@ def fetch_arxiv_papers(
                 published=published_str,
                 link=get_pdf_link(entry),
                 summary=entry.summary,
-                category=category,
+                category=entry.primary_category.term if hasattr(entry, "primary_category") else categories[0],
             )
             entries.append(formatted_entry)
 
@@ -98,7 +103,7 @@ def fetch_arxiv_papers(
 
 if __name__ == "__main__":
     # Parameters
-    category = "cs.AI"  # Replace with desired category
+    categories = ["cs.AI", "cs.LG"]  # List of categories to filter by
     max_results = 200  # Number of results to fetch
 
     # Example of using custom date range
@@ -106,7 +111,7 @@ if __name__ == "__main__":
     end_date = datetime.date(2024, 3, 15)
 
     # Fetch and process papers
-    entries = fetch_arxiv_papers(category, max_results, start_date, end_date)
+    entries = fetch_arxiv_papers(categories, max_results, start_date, end_date)
 
     # Print results in similar format to bioarxiv.py
     print(f"Papers from this week: {len(entries)}")
