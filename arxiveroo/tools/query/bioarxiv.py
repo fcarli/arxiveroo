@@ -3,6 +3,8 @@ from dataclasses import dataclass
 
 import requests
 
+from .utils import format_entries
+
 
 @dataclass
 class BioArxivEntry:
@@ -90,7 +92,7 @@ def fetch_biorxiv_papers(
         if entry_category in category_filters:
             # Format the entry to match arXiv structure
             formatted_entry = BioArxivEntry(
-                title=entry.get("title", ""),
+                title=entry.get("title", "").strip().replace("\n", " "),
                 authors=entry.get("authors", ""),
                 published=entry.get("date", ""),
                 link=get_pdf_link(entry),
@@ -99,7 +101,7 @@ def fetch_biorxiv_papers(
             )
             entries.append(formatted_entry)
 
-    return entries
+    return format_entries(entries)
 
 
 if __name__ == "__main__":

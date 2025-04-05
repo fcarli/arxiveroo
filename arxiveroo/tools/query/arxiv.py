@@ -2,6 +2,9 @@ import datetime
 from dataclasses import dataclass
 
 import feedparser
+from langchain.tools import tool
+
+from .utils import format_entries
 
 
 @dataclass
@@ -36,13 +39,17 @@ def get_pdf_link(entry) -> str:
     return page_url.replace("/abs/", "/pdf/") + ".pdf"
 
 
+@tool
 def fetch_arxiv_papers(
     categories: list[str] | str = "cs.AI",
     max_results: int = 200,
     start_date: datetime.date | None = None,
     end_date: datetime.date | None = None,
 ) -> list[ArxivEntry]:
-    """Fetch papers from arXiv API and format them similarly to bioRxiv entries.
+    """Fetch papers from arXiv API.
+
+    The function takes as input the categories, max_results, start_date, and end_date.
+    It then fetches the papers from the arXiv API and returns them in a list of ArxivEntry objects.
 
     Args:
         categories: Single category or list of categories to filter papers by (e.g., "cs.AI", ["cs.AI", "cs.LG"])
@@ -89,7 +96,7 @@ def fetch_arxiv_papers(
         if start_date <= published_date <= end_date:
             # Format the entry to match bioRxiv structure
             formatted_entry = ArxivEntry(
-                title=entry.title,
+                title=entry.title.strip().replace("\n", " "),
                 authors=", ".join(author.name for author in entry.authors),
                 published=published_str,
                 link=get_pdf_link(entry),
@@ -98,7 +105,7 @@ def fetch_arxiv_papers(
             )
             entries.append(formatted_entry)
 
-    return entries
+    return format_entries(entries)
 
 
 if __name__ == "__main__":
