@@ -31,25 +31,36 @@ def get_pdf_link(entry: dict) -> str:
     # Example: 10.1101/2024.03.21.586123 -> https://www.biorxiv.org/content/10.1101/2024.03.21.586123v1.full.pdf
     return f"https://www.biorxiv.org/content/{doi}v1.full.pdf"
 
-def fetch_biorxiv_papers(category_filter: str = "Genomics", server: str = "biorxiv") -> List[BioArxivEntry]:
+def fetch_biorxiv_papers(
+    category_filter: str = "Genomics", 
+    server: str = "biorxiv",
+    start_date: Optional[datetime.date] = None,
+    end_date: Optional[datetime.date] = None
+) -> List[BioArxivEntry]:
     """
     Fetch papers from bioRxiv API and format them similarly to arXiv entries.
     
     Args:
         category_filter: Category to filter papers by
         server: Either "biorxiv" or "medrxiv"
+        start_date: Start date for paper search (defaults to today)
+        end_date: End date for paper search (defaults to today)
     
     Returns:
         List of BioArxivEntry objects
     """
-    # Get current date and one week ago date (UTC)
+    # Set default dates if not provided
     today = datetime.datetime.utcnow().date()
-    one_week_ago = today - datetime.timedelta(days=7)
-    today_str = today.strftime("%Y-%m-%d")
-    one_week_ago_str = one_week_ago.strftime("%Y-%m-%d")
+    if end_date is None:
+        end_date = today
+    if start_date is None:
+        start_date = today
+    
+    today_str = end_date.strftime("%Y-%m-%d")
+    start_date_str = start_date.strftime("%Y-%m-%d")
 
     # Construct the bioRxiv API URL
-    api_url = f"https://api.biorxiv.org/details/{server}/{one_week_ago_str}/{today_str}"
+    api_url = f"https://api.biorxiv.org/details/{server}/{start_date_str}/{today_str}"
     print(f"Fetching data from: {api_url}")
 
     # Fetch the JSON data from bioRxiv
@@ -84,9 +95,13 @@ if __name__ == "__main__":
     # Parameters
     category_filter = "Genomics"  # Replace with your desired category
     server = "biorxiv"  # Use "biorxiv" or "medrxiv"
+    
+    # Example of using custom date range
+    start_date = datetime.date(2024, 3, 1)
+    end_date = datetime.date(2024, 3, 15)
 
     # Fetch and process papers
-    entries = fetch_biorxiv_papers(category_filter, server)
+    entries = fetch_biorxiv_papers(category_filter, server, start_date, end_date)
     
     # Print results in similar format to arxiv.py
     print(f"Total entries fetched: {len(entries)}")
