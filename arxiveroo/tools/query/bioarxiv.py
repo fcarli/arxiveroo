@@ -94,7 +94,7 @@ def fetch_biorxiv_papers(
             formatted_entry = BioArxivEntry(
                 title=entry.get("title", "").strip().replace("\n", " "),
                 authors=entry.get("authors", ""),
-                published=entry.get("date", ""),
+                published=datetime.datetime.strptime(entry.get("date", ""), "%Y-%m-%d").strftime("%d,%m,%Y"),
                 link=get_pdf_link(entry),
                 summary=entry.get("abstract", ""),
                 category=entry.get("category", ""),

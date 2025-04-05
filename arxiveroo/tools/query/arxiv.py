@@ -98,7 +98,7 @@ def fetch_arxiv_papers(
             formatted_entry = ArxivEntry(
                 title=entry.title.strip().replace("\n", " "),
                 authors=", ".join(author.name for author in entry.authors),
-                published=published_str,
+                published=published_date.strftime("%d,%m,%Y"),
                 link=get_pdf_link(entry),
                 summary=entry.summary,
                 category=entry.primary_category.term if hasattr(entry, "primary_category") else categories[0],
