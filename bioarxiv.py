@@ -1,11 +1,13 @@
 import datetime
-import requests
 from dataclasses import dataclass
-from typing import List, Optional
+
+import requests
+
 
 @dataclass
 class BioArxivEntry:
     """Represents a bioRxiv preprint entry with similar structure to arXiv entries."""
+
     title: str
     authors: str
     published: str
@@ -13,16 +15,17 @@ class BioArxivEntry:
     summary: str
     category: str
 
+
 def get_pdf_link(entry: dict) -> str:
-    """
-    Extract the PDF link from a bioRxiv entry.
+    """Extract the PDF link from a bioRxiv entry.
     bioRxiv entries have a DOI that needs to be converted to a PDF URL.
-    
+
     Args:
         entry: A dictionary from bioRxiv API response
-        
+
     Returns:
         str: The PDF link for the paper
+
     """
     doi = entry.get("doi", "")
     if not doi:
@@ -31,23 +34,24 @@ def get_pdf_link(entry: dict) -> str:
     # Example: 10.1101/2024.03.21.586123 -> https://www.biorxiv.org/content/10.1101/2024.03.21.586123v1.full.pdf
     return f"https://www.biorxiv.org/content/{doi}v1.full.pdf"
 
+
 def fetch_biorxiv_papers(
-    category_filter: str = "Genomics", 
+    category_filter: str = "Genomics",
     server: str = "biorxiv",
-    start_date: Optional[datetime.date] = None,
-    end_date: Optional[datetime.date] = None
-) -> List[BioArxivEntry]:
-    """
-    Fetch papers from bioRxiv API and format them similarly to arXiv entries.
-    
+    start_date: datetime.date | None = None,
+    end_date: datetime.date | None = None,
+) -> list[BioArxivEntry]:
+    """Fetch papers from bioRxiv API and format them similarly to arXiv entries.
+
     Args:
         category_filter: Category to filter papers by
         server: Either "biorxiv" or "medrxiv"
         start_date: Start date for paper search (defaults to today)
         end_date: End date for paper search (defaults to today)
-    
+
     Returns:
         List of BioArxivEntry objects
+
     """
     # Set default dates if not provided
     today = datetime.datetime.utcnow().date()
@@ -55,7 +59,7 @@ def fetch_biorxiv_papers(
         end_date = today
     if start_date is None:
         start_date = today
-    
+
     today_str = end_date.strftime("%Y-%m-%d")
     start_date_str = start_date.strftime("%Y-%m-%d")
 
@@ -85,24 +89,25 @@ def fetch_biorxiv_papers(
                 published=entry.get("date", ""),
                 link=get_pdf_link(entry),
                 summary=entry.get("abstract", ""),
-                category=entry.get("category", "")
+                category=entry.get("category", ""),
             )
             entries.append(formatted_entry)
 
     return entries
 
+
 if __name__ == "__main__":
     # Parameters
     category_filter = "Genomics"  # Replace with your desired category
     server = "biorxiv"  # Use "biorxiv" or "medrxiv"
-    
+
     # Example of using custom date range
     start_date = datetime.date(2024, 3, 1)
     end_date = datetime.date(2024, 3, 15)
 
     # Fetch and process papers
     entries = fetch_biorxiv_papers(category_filter, server, start_date, end_date)
-    
+
     # Print results in similar format to arxiv.py
     print(f"Total entries fetched: {len(entries)}")
     for entry in entries:
