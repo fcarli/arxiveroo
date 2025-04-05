@@ -1,6 +1,4 @@
-from .arxiv import ArxivEntry
-from .bioarxiv import BioArxivEntry
-from .medrxiv import MedArxivEntry
+from .models import ArxivEntry, BioArxivEntry, MedArxivEntry
 
 
 def format_entries(entries: list[ArxivEntry | BioArxivEntry | MedArxivEntry]) -> str:
@@ -17,7 +15,6 @@ def format_entries(entries: list[ArxivEntry | BioArxivEntry | MedArxivEntry]) ->
 
     for idx, entry in enumerate(entries):
         paper_info = [
-            #f"\n**Paper {idx + 1}:**",
             f"## {entry.title.strip()}",
             f"**Authors:** {entry.authors}",
             f"**Published:** {entry.published}",

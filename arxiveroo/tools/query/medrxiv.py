@@ -1,21 +1,9 @@
 import datetime
-from dataclasses import dataclass
 
 import requests
-
-from .utils import format_entries
-
-
-@dataclass
-class MedArxivEntry:
-    """Represents a medRxiv preprint entry with similar structure to arXiv entries."""
-
-    title: str
-    authors: str
-    published: str
-    link: str
-    summary: str
-    category: str
+from langchain.tools import tool
+from .formatters import format_entries
+from .models import MedArxivEntry
 
 
 def get_pdf_link(entry: dict) -> str:
@@ -37,17 +25,16 @@ def get_pdf_link(entry: dict) -> str:
     return f"https://www.medrxiv.org/content/{doi}v1.full.pdf"
 
 
+@tool
 def fetch_medrxiv_papers(
     category_filters: list[str] | str = "Epidemiology",
-    max_results: int = 200,
     start_date: datetime.date | None = None,
     end_date: datetime.date | None = None,
 ) -> list[MedArxivEntry]:
     """Fetch papers from medRxiv API and format them similarly to arXiv entries.
 
     Args:
-        category_filters: Single category or list of categories to filter papers by (e.g., "Epidemiology", ["Epidemiology", "Clinical Trials"])
-        max_results: Maximum number of results to fetch
+        category_filters: Single category or list of categories to filter papers by
         start_date: Start date for paper search (defaults to today)
         end_date: End date for paper search (defaults to today)
 
@@ -71,7 +58,7 @@ def fetch_medrxiv_papers(
     start_date_str = start_date.strftime("%Y-%m-%d")
 
     # Construct the medRxiv API URL
-    api_url = f"https://api.biorxiv.org/details/medrxiv/{start_date_str}/{today_str}"
+    api_url = f"https://api.medrxiv.org/details/medrxiv/{start_date_str}/{today_str}"
     print(f"Fetching data from: {api_url}")
 
     # Fetch the JSON data from medRxiv
@@ -94,7 +81,7 @@ def fetch_medrxiv_papers(
             formatted_entry = MedArxivEntry(
                 title=entry.get("title", "").strip().replace("\n", " "),
                 authors=entry.get("authors", ""),
-                published=datetime.datetime.strptime(entry.get("date", ""), "%Y-%m-%d").strftime("%d,%m,%Y"),
+                published=datetime.datetime.strptime(entry.get("date", ""), "%Y-%m-%d").strftime("%d/%m/%Y"),
                 link=get_pdf_link(entry),
                 summary=entry.get("abstract", ""),
                 category=entry.get("category", ""),
@@ -107,14 +94,13 @@ def fetch_medrxiv_papers(
 if __name__ == "__main__":
     # Parameters
     category_filters = ["Epidemiology", "Clinical Trials"]  # List of categories to filter by
-    max_results = 200  # Number of results to fetch
 
     # Example of using custom date range
     start_date = datetime.date(2024, 3, 1)
     end_date = datetime.date(2024, 3, 15)
 
     # Fetch and process papers
-    entries = fetch_medrxiv_papers(category_filters, max_results, start_date, end_date)
+    entries = fetch_medrxiv_papers(category_filters, start_date, end_date)
 
     # Print results in similar format to arxiv.py
     print(f"Total entries fetched: {len(entries)}")

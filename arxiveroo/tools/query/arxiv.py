@@ -1,22 +1,10 @@
 import datetime
-from dataclasses import dataclass
 
 import feedparser
 from langchain.tools import tool
 
-from .utils import format_entries
-
-
-@dataclass
-class ArxivEntry:
-    """Represents an arXiv paper entry with similar structure to bioRxiv entries."""
-
-    title: str
-    authors: str
-    published: str
-    link: str
-    summary: str
-    category: str
+from .formatters import format_entries
+from .models import ArxivEntry
 
 
 def get_pdf_link(entry) -> str:
@@ -98,7 +86,7 @@ def fetch_arxiv_papers(
             formatted_entry = ArxivEntry(
                 title=entry.title.strip().replace("\n", " "),
                 authors=", ".join(author.name for author in entry.authors),
-                published=published_date.strftime("%d,%m,%Y"),
+                published=published_date.strftime("%d/%m/%Y"),
                 link=get_pdf_link(entry),
                 summary=entry.summary,
                 category=entry.primary_category.term if hasattr(entry, "primary_category") else categories[0],

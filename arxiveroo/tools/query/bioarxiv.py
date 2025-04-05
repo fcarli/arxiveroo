@@ -1,21 +1,9 @@
 import datetime
-from dataclasses import dataclass
 
 import requests
-
-from .utils import format_entries
-
-
-@dataclass
-class BioArxivEntry:
-    """Represents a bioRxiv preprint entry with similar structure to arXiv entries."""
-
-    title: str
-    authors: str
-    published: str
-    link: str
-    summary: str
-    category: str
+from langchain.tools import tool
+from .formatters import format_entries
+from .models import BioArxivEntry
 
 
 def get_pdf_link(entry: dict) -> str:
@@ -36,7 +24,7 @@ def get_pdf_link(entry: dict) -> str:
     # Example: 10.1101/2024.03.21.586123 -> https://www.biorxiv.org/content/10.1101/2024.03.21.586123v1.full.pdf
     return f"https://www.biorxiv.org/content/{doi}v1.full.pdf"
 
-
+@tool
 def fetch_biorxiv_papers(
     category_filters: list[str] | str = "Genomics",
     server: str = "biorxiv",
@@ -94,7 +82,7 @@ def fetch_biorxiv_papers(
             formatted_entry = BioArxivEntry(
                 title=entry.get("title", "").strip().replace("\n", " "),
                 authors=entry.get("authors", ""),
-                published=datetime.datetime.strptime(entry.get("date", ""), "%Y-%m-%d").strftime("%d,%m,%Y"),
+                published=datetime.datetime.strptime(entry.get("date", ""), "%Y-%m-%d").strftime("%d/%m/%Y"),
                 link=get_pdf_link(entry),
                 summary=entry.get("abstract", ""),
                 category=entry.get("category", ""),
