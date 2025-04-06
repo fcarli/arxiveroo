@@ -2,6 +2,7 @@ import datetime
 
 import requests
 from langchain.tools import tool
+
 from .formatters import format_entries
 from .models import BioArxivEntry
 
@@ -23,6 +24,7 @@ def get_pdf_link(entry: dict) -> str:
     # Convert DOI to PDF URL
     # Example: 10.1101/2024.03.21.586123 -> https://www.biorxiv.org/content/10.1101/2024.03.21.586123v1.full.pdf
     return f"https://www.biorxiv.org/content/{doi}v1.full.pdf"
+
 
 @tool
 def fetch_biorxiv_papers(
