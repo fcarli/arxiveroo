@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "feedselector"
 version = "0.1.0"
@@ -6,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "bs4>=0.0.2",
+    "chainlit>=2.4.400",
     "feedparser>=6.0.11",
     "langchain>=0.3.23",
     "langchain-community>=0.3.21",
@@ -15,11 +20,22 @@ dependencies = [
     "pandas>=2.2.3",
     "pydantic>=2.11.2",
     "requests>=2.32.3",
+    "click>=8.1.7",
 ]
+
+[tool.setuptools]
+packages = ["arxiveroo"]
+
+[project.scripts]
+arxiveroo = "arxiveroo.cli:cli"
 
 [dependency-groups]
 dev = [
+    "feedselector",
     "ruff>=0.11.4",
+]
+notebook = [
+    "jupyter>=1.1.1",
 ]
 
 
@@ -40,3 +56,6 @@ max-doc-length = 80
 
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
+
+[tool.uv.sources]
+feedselector = { workspace = true }
