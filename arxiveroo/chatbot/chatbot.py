@@ -92,6 +92,7 @@ def create_category_model(categories: list[str]) -> type[BaseModel]:
 
 async def initialize_preferences(content: str):
     # read the resources csv TODO: remember to relativize the path
+    messages = cl.user_session.get("messages")
     initalization_chat = []
     initalization_chat.extend(messages)
 
@@ -117,9 +118,11 @@ async def initialize_preferences(content: str):
     # save the first message
     initalization_chat.append(HumanMessage(content=content))
 
+    chat_so_far = "\n".join([str(m.content) for m in initalization_chat])
+
     # first call to the model
     response = model.invoke(
-        INITIALIZATION_PROMPT.format(user_preferences=content, available_resources=string_resources)
+        INITIALIZATION_PROMPT.format(user_preferences=chat_so_far, available_resources=string_resources)
     )
 
     # format the response
