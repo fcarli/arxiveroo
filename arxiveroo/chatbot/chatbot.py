@@ -1,4 +1,5 @@
 import datetime
+import importlib.resources
 
 import chainlit as cl
 import pandas as pd
@@ -92,7 +93,12 @@ def create_category_model(categories: list[str]) -> type[BaseModel]:
 async def initialize_preferences(content: str):
     # read the resources csv TODO: remember to relativize the path
     initalization_chat = []
-    resources = pd.read_csv("/Users/mrcharles/LocalProj/feedSelector/arxiveroo/resources/categories_index.csv")
+    initalization_chat.extend(messages)
+
+    # Use importlib.resources to get the path to the CSV file
+    # The resource is located within the 'arxiveroo.resources' subpackage/directory
+    with importlib.resources.files('arxiveroo.resources').joinpath('categories_index.csv') as resource_path:
+        resources = pd.read_csv(resource_path)
 
     # join all rows into a single string
     string_resources = ""
