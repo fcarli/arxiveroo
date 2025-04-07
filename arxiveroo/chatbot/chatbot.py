@@ -2,22 +2,37 @@ import copy
 import datetime
 import importlib.resources
 import json
+import os
 import pathlib
+from collections.abc import Callable
 
 import chainlit as cl
 import pandas as pd
+
+# Import dotenv
+from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from pydantic import BaseModel, create_model
 from pydantic.types import Literal
 
-from arxiveroo.tools.query import fetch_arxiv_papers, fetch_biorxiv_papers, fetch_medrxiv_papers
+from arxiveroo.tools.query import fetch_arxiv_papers, fetch_biorxiv_papers, fetch_medrxiv_papers, fetch_all_papers
+
+# Load environment variables from .env file
+load_dotenv()
 
 nl = "\n"
 
-model = init_chat_model("google_genai:gemini-2.0-flash", temperature=0.0)
-available_tools = [fetch_arxiv_papers, fetch_biorxiv_papers, fetch_medrxiv_papers]
-model = model.bind_tools(available_tools)
+
+# Define the preference directory path
+preference_path_env = os.getenv("PREFERENCE_PATH")
+if preference_path_env:
+    PREFERENCE_DIR = pathlib.Path(preference_path_env)
+else:
+    PREFERENCE_DIR = pathlib.Path.home() / ".cache" / "arxiveroo"
+
+# Ensure the directory exists
+PREFERENCE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 INITIALIZATION_PROMPT = """
@@ -40,7 +55,7 @@ commands = [
 ]
 
 
-def process_tool_call(tool_call: dict) -> str | None:
+def process_tool_call(tool_call: dict, available_tools: list[Callable]) -> str | None:
     """Process a tool call and return the result.
 
     Args:
@@ -117,17 +132,12 @@ async def initialize_preferences(content: str):
 
     # structured output
     CategoryModel = create_category_model(list(categories_dict.keys()))
-    model = model.with_structured_output(CategoryModel)
-
     # save the first message
     initalization_chat.append(HumanMessage(content=content))
 
     chat_so_far = "\n".join([str(m.content) for m in initalization_chat])
 
     # take the conversation so far, summarize it and save it to cache for later use
-    user_cache_dir = pathlib.Path.home() / ".cache" / "arxiveroo"
-    user_cache_dir.mkdir(parents=True, exist_ok=True)
-
     interests_summary = copy.deepcopy(initalization_chat)
     interests_summary.append(
         HumanMessage(
@@ -136,7 +146,7 @@ async def initialize_preferences(content: str):
     )
     interests_summary = model.invoke(interests_summary).content
 
-    with open(user_cache_dir / "interests_summary.json", "w") as f:
+    with open(PREFERENCE_DIR / "interests_summary.json", "w") as f:
         json.dump(interests_summary, f)
 
     # first call to the model
@@ -145,7 +155,7 @@ async def initialize_preferences(content: str):
     )
 
     # save the categories to cache
-    with open(user_cache_dir / "categories.json", "w") as f:
+    with open(PREFERENCE_DIR / "categories.json", "w") as f:
         json.dump(response.selected_categories, f)
 
     selected_categories = [
@@ -188,7 +198,7 @@ async def initialize_preferences(content: str):
             refined_response = model.with_structured_output(CategoryModel).invoke(initalization_chat)
 
             # save the categories to cache
-            with open(user_cache_dir / "categories.json", "w") as f:
+            with open(PREFERENCE_DIR / "categories.json", "w") as f:
                 json.dump(refined_response.selected_categories, f)
 
             # format the response
