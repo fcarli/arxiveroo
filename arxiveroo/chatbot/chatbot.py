@@ -103,16 +103,17 @@ async def initialize_preferences(content: str):
 
     # join all rows into a single string
     string_resources = ""
-    categories = []
+    categories_dict = {}
     for index, row in resources.iterrows():
         string_resources += f"{row['category_code']}: {row['description']}\n"
-        categories.append(row["category_code"])
+        categories_dict[row["category_code"]] = (row["description"], row["database"])
 
     # model initialization
+    #TODO: extend also to other models
     model = init_chat_model("google_genai:gemini-2.0-flash", temperature=0.0)
 
     # structured output
-    CategoryModel = create_category_model(categories)
+    CategoryModel = create_category_model(list(categories_dict.keys()))
     model = model.with_structured_output(CategoryModel)
 
     # save the first message
@@ -125,8 +126,10 @@ async def initialize_preferences(content: str):
         INITIALIZATION_PROMPT.format(user_preferences=chat_so_far, available_resources=string_resources)
     )
 
+    selected_categories = [f"**{category}** ({categories_dict[category][1]}): {categories_dict[category][0]}" for category in response.selected_categories]
+
     # format the response
-    response = f"I've selected the following categories for you:{nl}-{(nl + '-').join(response.selected_categories)}"
+    response = f"I've selected the following categories for you:{nl}-{(nl + '-').join(selected_categories)}"
 
     # save the response into the messages
     initalization_chat.append(AIMessage(content=response))
