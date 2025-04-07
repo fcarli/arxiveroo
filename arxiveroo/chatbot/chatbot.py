@@ -32,8 +32,8 @@ Consider the preferences of the user and select from the list of available resou
 
 
 commands = [
-    {"id": "Initialize", "icon": "image", "description": "Initialize your preferences"},
-    {"id": "ListCategories", "icon": "image", "description": "List the available categories"},
+    {"id": "Initialize", "icon": "land-plot", "description": "Initialize your preferences"},
+    {"id": "ListCategories", "icon": "layout-list", "description": "List the available categories"},
 ]
 
 
@@ -98,7 +98,7 @@ async def initialize_preferences(content: str):
 
     # Use importlib.resources to get the path to the CSV file
     # The resource is located within the 'arxiveroo.resources' subpackage/directory
-    with importlib.resources.files('arxiveroo.resources').joinpath('categories_index.csv') as resource_path:
+    with importlib.resources.files("arxiveroo.resources").joinpath("categories_index.csv") as resource_path:
         resources = pd.read_csv(resource_path)
 
     # join all rows into a single string
@@ -109,7 +109,7 @@ async def initialize_preferences(content: str):
         categories_dict[row["category_code"]] = (row["description"], row["database"])
 
     # model initialization
-    #TODO: extend also to other models
+    # TODO: extend also to other models
     model = init_chat_model("google_genai:gemini-2.0-flash", temperature=0.0)
 
     # structured output
@@ -126,7 +126,12 @@ async def initialize_preferences(content: str):
         INITIALIZATION_PROMPT.format(user_preferences=chat_so_far, available_resources=string_resources)
     )
 
-    selected_categories = [f"**{category}** ({categories_dict[category][1]}): {categories_dict[category][0]}" for category in response.selected_categories]
+    # create a folder in the chache of the user and save the categories
+
+    selected_categories = [
+        f"**{category}** ({categories_dict[category][1]}): {categories_dict[category][0]}"
+        for category in response.selected_categories
+    ]
 
     # format the response
     response = f"I've selected the following categories for you:{nl}-{(nl + '-').join(selected_categories)}"
