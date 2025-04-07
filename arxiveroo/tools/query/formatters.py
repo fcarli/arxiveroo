@@ -1,8 +1,8 @@
-from .models import ArxivEntry, BioArxivEntry, MedArxivEntry
+from .models import Entry
 
 
-def format_entries(entries: list[ArxivEntry | BioArxivEntry | MedArxivEntry]) -> str:
-    """Format a list of ArxivEntry objects into a human-readable string.
+def format_entries(entries: list[Entry]) -> str:
+    """Format a list of Entry objects into a human-readable string.
 
     Args:
         entries: List of ArxivEntry objects to format
