@@ -4,7 +4,7 @@ import requests
 from langchain.tools import tool
 
 from .formatters import format_entries
-from .models import MedArxivEntry
+from .models import Entry
 
 
 def get_pdf_link(entry: dict) -> str:
@@ -31,7 +31,7 @@ def fetch_medrxiv_papers(
     category_filters: list[str] | str = "Epidemiology",
     start_date: datetime.date | None = None,
     end_date: datetime.date | None = None,
-) -> list[MedArxivEntry]:
+) -> list[Entry]:
     """Fetch papers from medRxiv API and format them similarly to arXiv entries.
 
     Args:
@@ -40,7 +40,7 @@ def fetch_medrxiv_papers(
         end_date: End date for paper search (defaults to today)
 
     Returns:
-        List of MedArxivEntry objects
+        List of Entry objects
 
     """
     # Convert single category to list for consistent processing
@@ -79,17 +79,18 @@ def fetch_medrxiv_papers(
         entry_category = entry.get("category", "").lower()
         if entry_category in category_filters:
             # Format the entry to match arXiv structure
-            formatted_entry = MedArxivEntry(
+            formatted_entry = Entry(
                 title=entry.get("title", "").strip().replace("\n", " "),
                 authors=entry.get("authors", ""),
                 published=datetime.datetime.strptime(entry.get("date", ""), "%Y-%m-%d").strftime("%d/%m/%Y"),
                 link=get_pdf_link(entry),
                 summary=entry.get("abstract", ""),
                 category=entry.get("category", ""),
+                database="medrxiv",
             )
             entries.append(formatted_entry)
 
-    return format_entries(entries)
+    return format_entries(entries), entries
 
 
 if __name__ == "__main__":

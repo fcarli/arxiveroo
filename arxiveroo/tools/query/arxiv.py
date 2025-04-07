@@ -4,7 +4,7 @@ import feedparser
 from langchain.tools import tool
 
 from .formatters import format_entries
-from .models import ArxivEntry
+from .models import Entry
 
 
 def get_pdf_link(entry) -> str:
@@ -33,11 +33,11 @@ def fetch_arxiv_papers(
     max_results: int = 200,
     start_date: datetime.date | None = None,
     end_date: datetime.date | None = None,
-) -> list[ArxivEntry]:
+) -> list[Entry]:
     """Fetch papers from arXiv API.
 
     The function takes as input the categories, max_results, start_date, and end_date.
-    It then fetches the papers from the arXiv API and returns them in a list of ArxivEntry objects.
+    It then fetches the papers from the arXiv API and returns them in a list of Entry objects.
 
     Args:
         categories: Single category or list of categories to filter papers by (e.g., "cs.AI", ["cs.AI", "cs.LG"])
@@ -46,7 +46,7 @@ def fetch_arxiv_papers(
         end_date: End date for paper search (defaults to today)
 
     Returns:
-        List of ArxivEntry objects
+        List of Entry objects
 
     """
     # Convert single category to list for consistent processing
@@ -83,17 +83,18 @@ def fetch_arxiv_papers(
 
         if start_date <= published_date <= end_date:
             # Format the entry to match bioRxiv structure
-            formatted_entry = ArxivEntry(
+            formatted_entry = Entry(
                 title=entry.title.strip().replace("\n", " "),
                 authors=", ".join(author.name for author in entry.authors),
                 published=published_date.strftime("%d/%m/%Y"),
                 link=get_pdf_link(entry),
                 summary=entry.summary,
                 category=entry.primary_category.term if hasattr(entry, "primary_category") else categories[0],
+                database="arxiv",
             )
             entries.append(formatted_entry)
 
-    return format_entries(entries)
+    return format_entries(entries), entries
 
 
 if __name__ == "__main__":
