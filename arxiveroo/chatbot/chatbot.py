@@ -1,5 +1,8 @@
+import copy
 import datetime
 import importlib.resources
+import json
+import pathlib
 
 import chainlit as cl
 import pandas as pd
@@ -121,12 +124,29 @@ async def initialize_preferences(content: str):
 
     chat_so_far = "\n".join([str(m.content) for m in initalization_chat])
 
+    # take the conversation so far, summarize it and save it to cache for later use
+    user_cache_dir = pathlib.Path.home() / ".cache" / "arxiveroo"
+    user_cache_dir.mkdir(parents=True, exist_ok=True)
+
+    interests_summary = copy.deepcopy(initalization_chat)
+    interests_summary.append(
+        HumanMessage(
+            content="Given the above conversation, save the user's interests in a detailed description (also keywords). Only output the description, no other text."
+        )
+    )
+    interests_summary = model.invoke(interests_summary).content
+
+    with open(user_cache_dir / "interests_summary.json", "w") as f:
+        json.dump(interests_summary, f)
+
     # first call to the model
-    response = model.invoke(
+    response = model.with_structured_output(CategoryModel).invoke(
         INITIALIZATION_PROMPT.format(user_preferences=chat_so_far, available_resources=string_resources)
     )
 
-    # create a folder in the chache of the user and save the categories
+    # save the categories to cache
+    with open(user_cache_dir / "categories.json", "w") as f:
+        json.dump(response.selected_categories, f)
 
     selected_categories = [
         f"**{category}** ({categories_dict[category][1]}): {categories_dict[category][0]}"
@@ -165,7 +185,11 @@ async def initialize_preferences(content: str):
             initalization_chat.append(HumanMessage(content=res["output"]))
 
             # invoke the model again
-            refined_response = model.invoke(initalization_chat)
+            refined_response = model.with_structured_output(CategoryModel).invoke(initalization_chat)
+
+            # save the categories to cache
+            with open(user_cache_dir / "categories.json", "w") as f:
+                json.dump(refined_response.selected_categories, f)
 
             # format the response
             response = f"I've selected the following categories for you:{nl}-{(nl + '-').join(refined_response.selected_categories)}"
