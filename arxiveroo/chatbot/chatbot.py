@@ -177,8 +177,8 @@ async def initialize_preferences(content: str):
         res = await cl.AskActionMessage(
             content="Are you satisfied with the selection?",
             actions=[
-                cl.Action(name="Yes", payload={"value": "continue"}, label="✅ Continue"),
-                cl.Action(name="No", payload={"value": "cancel"}, label="❌ Cancel"),
+                cl.Action(name="Yes", payload={"value": "Yes"}, label="✅ Continue"),
+                cl.Action(name="No", payload={"value": "No"}, label="❌ Cancel"),
             ],
         ).send()
 
