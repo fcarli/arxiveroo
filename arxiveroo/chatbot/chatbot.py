@@ -230,19 +230,36 @@ async def on_chat_start():
 async def on_message(msg: cl.Message):
     messages = cl.user_session.get("messages")
 
+    # save the user message
+    messages.append(HumanMessage(content=msg.content))
+
     if msg.command == "Initialize":
         await cl.Message("Initializing your preferences!").send()
         await initialize_preferences(msg.content)
 
-        return
+    elif msg.command == "ListCategories":
+        pass  # TODO: implement this
 
-    messages.append(HumanMessage(content=msg.content))
-    response = await model.ainvoke(messages)
+    elif msg.command == "ApplyPreferences":
+        # bind with preferred tool
+        model = init_chat_model("google_genai:gemini-2.0-flash", temperature=0.0)
+        available_tools = [tool(fetch_all_papers)]
+        model = model.bind_tools(available_tools)
+
+        response = await model.ainvoke(messages)
+
+    else:
+        # bind with all tools #TODO: implement capibility to handle multiple tool calls
+        model = init_chat_model("google_genai:gemini-2.0-flash", temperature=0.0)
+        available_tools = [tool(fetch_arxiv_papers), tool(fetch_biorxiv_papers), tool(fetch_medrxiv_papers)]
+        model = model.bind_tools(available_tools)
+
+        response = await model.ainvoke(messages)
 
     if response.tool_calls:
-        tool_result = process_tool_call(response.tool_calls[0])
-        messages.append(AIMessage(content=tool_result))
-        await cl.Message(tool_result).send()
+        tool_result_txt, tool_result_data = await process_tool_call(response.tool_calls[0], available_tools)
+        messages.append(AIMessage(content=tool_result_txt))
+        await cl.Message(tool_result_txt).send()
     else:
         messages.append(AIMessage(content=response.content))
         await cl.Message(response.content).send()
