@@ -151,7 +151,7 @@ async def initialize_preferences(content: str):
     )
     interests_summary = model.invoke(interests_summary).content
 
-    with open(PREFERENCE_DIR / "interests_summary.json", "w") as f:
+    with open(PREFERENCE_DIR / "user_preferences.json", "w") as f:
         json.dump(interests_summary, f)
 
     # first call to the model
