@@ -12,4 +12,3 @@ class Entry:
     summary: str
     category: str
     database: str
-
