@@ -60,7 +60,7 @@ commands = [
 ]
 
 
-def process_tool_call(tool_call: dict, available_tools: list[Callable]) -> str | None:
+async def process_tool_call(tool_call: dict, available_tools: list[Callable]) -> str | None:
     """Process a tool call and return the result.
 
     Args:
@@ -79,8 +79,8 @@ def process_tool_call(tool_call: dict, available_tools: list[Callable]) -> str |
 
     if tool_func:
         try:
-            tool_result = tool_func.invoke(tool_args)
-            print(tool_result)
+            tool_result = await tool_func.ainvoke(tool_args)
+
             messages.append(ToolMessage(content=str(tool_result), name=tool_name, tool_call_id=tool_call_id))
 
             return tool_result
