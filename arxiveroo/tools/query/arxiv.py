@@ -1,10 +1,10 @@
 import datetime
+import urllib.parse
 
 import feedparser
-from langchain.tools import tool
 
-from .formatters import format_entries
-from .models import Entry
+from arxiveroo.tools.query.formatters import format_entries
+from arxiveroo.tools.query.models import Entry
 
 
 def get_pdf_link(entry) -> str:
@@ -27,7 +27,6 @@ def get_pdf_link(entry) -> str:
     return page_url.replace("/abs/", "/pdf/") + ".pdf"
 
 
-@tool
 def fetch_arxiv_papers(
     categories: list[str] | str = "cs.AI",
     max_results: int = 200,
@@ -41,12 +40,12 @@ def fetch_arxiv_papers(
 
     Args:
         categories: Single category or list of categories to filter papers by (e.g., "cs.AI", ["cs.AI", "cs.LG"])
-        max_results: Maximum number of results to fetch
-        start_date: Start date for paper search (defaults to today)
-        end_date: End date for paper search (defaults to today)
+        max_results: Maximum number of results to fetch (defaults to 200, integer)
+        start_date: Start date for paper search (defaults to today, datetime.date object)
+        end_date: End date for paper search (defaults to today, datetime.date object)
 
     Returns:
-        List of Entry objects
+        List of formatted entries, list of Entry objects
 
     """
     # Convert single category to list for consistent processing
@@ -64,8 +63,27 @@ def fetch_arxiv_papers(
     base_url = "http://export.arxiv.org/api/query?"
     # Join categories with OR operator
     search_query = " OR ".join(f"cat:{cat}" for cat in categories)
+
+    # Add date range to the search query if provided
+    if start_date or end_date:
+        date_query = []
+        if start_date:
+            date_query.append(f"submittedDate:[{start_date.strftime('%Y%m%d')}000000 TO ")
+        else:
+            date_query.append("submittedDate:[00000000000000 TO ")
+
+        if end_date:
+            date_query.append(f"{end_date.strftime('%Y%m%d')}235959]")
+        else:
+            date_query.append("99999999999999]")
+
+        date_filter = "".join(date_query)
+        search_query = f"({search_query}) AND {date_filter}"
+
+    # Encode the search query to handle special characters like spaces
+    encoded_search_query = urllib.parse.quote(search_query)
     query_url = (
-        f"{base_url}search_query={search_query}"
+        f"{base_url}search_query={encoded_search_query}"
         f"&start=0&max_results={max_results}"
         f"&sortBy=submittedDate&sortOrder=descending"
     )

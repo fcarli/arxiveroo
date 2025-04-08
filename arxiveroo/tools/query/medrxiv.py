@@ -1,7 +1,6 @@
 import datetime
 
 import requests
-from langchain.tools import tool
 
 from .formatters import format_entries
 from .models import Entry
@@ -26,16 +25,15 @@ def get_pdf_link(entry: dict) -> str:
     return f"https://www.medrxiv.org/content/{doi}v1.full.pdf"
 
 
-@tool
 def fetch_medrxiv_papers(
-    category_filters: list[str] | str = "Epidemiology",
+    categories: list[str] | str = "Epidemiology",
     start_date: datetime.date | None = None,
     end_date: datetime.date | None = None,
 ) -> list[Entry]:
     """Fetch papers from medRxiv API and format them similarly to arXiv entries.
 
     Args:
-        category_filters: Single category or list of categories to filter papers by
+        categories: Single category or list of categories to filter papers by
         start_date: Start date for paper search (defaults to today)
         end_date: End date for paper search (defaults to today)
 
@@ -44,9 +42,9 @@ def fetch_medrxiv_papers(
 
     """
     # Convert single category to list for consistent processing
-    if isinstance(category_filters, str):
-        category_filters = [category_filters]
-    category_filters = [cat.lower() for cat in category_filters]
+    if isinstance(categories, str):
+        categories = [categories]
+    categories = [cat.lower() for cat in categories]
 
     # Set default dates if not provided
     today = datetime.datetime.utcnow().date()
@@ -77,7 +75,7 @@ def fetch_medrxiv_papers(
     entries = []
     for entry in data["collection"]:
         entry_category = entry.get("category", "").lower()
-        if entry_category in category_filters:
+        if entry_category in categories:
             # Format the entry to match arXiv structure
             formatted_entry = Entry(
                 title=entry.get("title", "").strip().replace("\n", " "),

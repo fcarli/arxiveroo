@@ -1,10 +1,9 @@
 import datetime
 
 import requests
-from langchain.tools import tool
 
-from .formatters import format_entries
-from .models import Entry
+from arxiveroo.tools.query.formatters import format_entries
+from arxiveroo.tools.query.models import Entry
 
 
 def get_pdf_link(entry: dict) -> str:
@@ -26,18 +25,15 @@ def get_pdf_link(entry: dict) -> str:
     return f"https://www.biorxiv.org/content/{doi}v1.full.pdf"
 
 
-@tool
 def fetch_biorxiv_papers(
-    category_filters: list[str] | str = "Genomics",
-    server: str = "biorxiv",
+    categories: list[str] | str = "Genomics",
     start_date: datetime.date | None = None,
     end_date: datetime.date | None = None,
 ) -> list[Entry]:
     """Fetch papers from bioRxiv API and format them similarly to arXiv entries.
 
     Args:
-        category_filters: Single category or list of categories to filter papers by
-        server: Either "biorxiv" or "medrxiv"
+        categories: Single category or list of categories to filter papers by
         start_date: Start date for paper search (defaults to today)
         end_date: End date for paper search (defaults to today)
 
@@ -46,9 +42,9 @@ def fetch_biorxiv_papers(
 
     """
     # Convert single category to list for consistent processing
-    if isinstance(category_filters, str):
-        category_filters = [category_filters]
-    category_filters = [cat.lower() for cat in category_filters]
+    if isinstance(categories, str):
+        categories = [categories]
+    categories = [cat.lower() for cat in categories]
 
     # Set default dates if not provided
     today = datetime.datetime.utcnow().date()
@@ -61,7 +57,7 @@ def fetch_biorxiv_papers(
     start_date_str = start_date.strftime("%Y-%m-%d")
 
     # Construct the bioRxiv API URL
-    api_url = f"https://api.biorxiv.org/details/{server}/{start_date_str}/{today_str}"
+    api_url = f"https://api.biorxiv.org/details/biorxiv/{start_date_str}/{today_str}"
     print(f"Fetching data from: {api_url}")
 
     # Fetch the JSON data from bioRxiv
@@ -79,7 +75,7 @@ def fetch_biorxiv_papers(
     entries = []
     for entry in data["collection"]:
         entry_category = entry.get("category", "").lower()
-        if entry_category in category_filters:
+        if entry_category in categories:
             # Format the entry to match arXiv structure
             formatted_entry = Entry(
                 title=entry.get("title", "").strip().replace("\n", " "),
