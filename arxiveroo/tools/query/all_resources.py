@@ -40,7 +40,7 @@ PREFERENCE_DIR.mkdir(parents=True, exist_ok=True)
 RELEVANCE_PROMPT = """
 You are a helpful assistant with expertise in biomedical research that can annotate papers according to the user's preference.
 
-You annotate the paper by saying whether it is relevant or not providing a reason and by giving a score between 0 and 1. Be granular in your judgement scores.
+You annotate the paper by saying whether it is relevant or not providing a reason and by giving a score between 1 and 10 where 1 is the lowest and 10 is the highest. Be granular in your judgement scores.
 
 For example:
 - If the user expressed both metododological and apllied interests, papers that match both are more relevant (than papers that match only one of the two).
@@ -65,8 +65,8 @@ class EntryAnnotation(BaseModel):
     reason: Annotated[str, "The reason for the judgement"]
     is_relevant: Annotated[bool, "Whether the paper is relevant to the user's preferences"]
     relevance_score: Annotated[
-        float, "The score of the relevance of the paper to the user's preferences, between 0 and 1"
-    ] = Field(ge=0, le=1)
+        int, "The score of the relevance of the paper to the user's preferences, between 1 and 10, where 1 is the lowest and 10 is the highest"
+    ] = Field(ge=1, le=10)
 
 
 # actual function to call
