@@ -113,6 +113,7 @@ def create_category_model(categories: list[str]) -> type[BaseModel]:
     return DynamicModel
 
 
+@cl.step(type="tool")
 async def initialize_preferences(content: str):
     # read the resources csv TODO: remember to relativize the path
     messages = cl.user_session.get("messages")
