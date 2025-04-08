@@ -94,23 +94,23 @@ def fetch_arxiv_papers(
             )
             entries.append(formatted_entry)
 
-    return format_entries(entries), entries
+    return format_entries(entries, start_date, end_date), entries
 
 
 if __name__ == "__main__":
     # Parameters
-    categories = ["cs.AI", "cs.LG"]  # List of categories to filter by
+    categories = ["cs.AI"]  # List of categories to filter by
     max_results = 200  # Number of results to fetch
 
     # Example of using custom date range
-    start_date = datetime.date(2024, 3, 1)
-    end_date = datetime.date(2024, 3, 15)
+    start_date = datetime.date(2025, 4, 3)
+    end_date = datetime.date(2025, 4, 7)
 
     # Fetch and process papers
-    entries = fetch_arxiv_papers(categories, max_results, start_date, end_date)
+    text, entries = fetch_arxiv_papers(categories, max_results, start_date, end_date)
 
     # Print results in similar format to bioarxiv.py
-    print(f"Papers from this week: {len(entries)}")
+    print(f"Papers from {start_date} to {end_date}: {len(entries)}")
     for entry in entries:
         print(f"\nTitle: {entry.title}")
         print(f"Authors: {entry.authors}")

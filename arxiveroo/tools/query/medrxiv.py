@@ -90,22 +90,22 @@ def fetch_medrxiv_papers(
             )
             entries.append(formatted_entry)
 
-    return format_entries(entries), entries
+    return format_entries(entries, start_date, end_date), entries
 
 
 if __name__ == "__main__":
     # Parameters
-    category_filters = ["Epidemiology", "Clinical Trials"]  # List of categories to filter by
+    categories = ["Epidemiology", "Clinical Trials"]  # List of categories to filter by
 
     # Example of using custom date range
     start_date = datetime.date(2024, 3, 1)
     end_date = datetime.date(2024, 3, 15)
 
     # Fetch and process papers
-    entries = fetch_medrxiv_papers(category_filters, start_date, end_date)
+    entries = fetch_medrxiv_papers(categories, start_date, end_date)
 
     # Print results in similar format to arxiv.py
-    print(f"Total entries fetched: {len(entries)}")
+    print(f"Papers from {start_date} to {end_date}: {len(entries)}")
     for entry in entries:
         print(f"\nTitle: {entry.title}")
         print(f"Authors: {entry.authors}")
