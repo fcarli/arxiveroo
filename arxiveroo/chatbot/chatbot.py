@@ -52,6 +52,11 @@ Consider the preferences of the user and select from the list of available resou
 commands = [
     {"id": "Initialize", "icon": "land-plot", "description": "Initialize your preferences"},
     {"id": "ListCategories", "icon": "layout-list", "description": "List the available categories"},
+    {
+        "id": "ApplyPreferences",
+        "icon": "fingerprint",
+        "description": "Apply your preferences to the available resources",
+    },
 ]
 
 
@@ -177,8 +182,8 @@ async def initialize_preferences(content: str):
         res = await cl.AskActionMessage(
             content="Are you satisfied with the selection?",
             actions=[
-                cl.Action(name="Yes", payload={"value": "Yes"}, label="✅ Continue"),
-                cl.Action(name="No", payload={"value": "No"}, label="❌ Cancel"),
+                cl.Action(name="Yes", payload={"value": "Yes"}, label="✅ Yes"),
+                cl.Action(name="No", payload={"value": "No"}, label="❌ No"),
             ],
         ).send()
 
